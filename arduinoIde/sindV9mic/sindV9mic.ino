@@ -16,7 +16,7 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
 // #define I2S_SD               14
 // #define I2S_SCK              2
 #define I2S_SAMPLE_BIT_COUNT 16
-#define SOUND_SAMPLE_RATE    8000
+#define SOUND_SAMPLE_RATE    16000
 #define SOUND_CHANNEL_COUNT  1
 
 
