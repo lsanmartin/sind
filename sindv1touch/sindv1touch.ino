@@ -7,10 +7,10 @@
 #define PIN_SCK  18
 #define PIN_MOSI 23
 #define PIN_MISO -1
-#define PIN_RST  15
+#define PIN_RST  19
 
 #define BUTTON_UP_PIN 2
-#define BUTTON_DOWN_PIN 3
+#define BUTTON_DOWN_PIN 14
 
 Arduino_DataBus *bus = new Arduino_ESP32SPI(PIN_DC, PIN_CS, PIN_SCK, PIN_MOSI, PIN_MISO, VSPI);
 Arduino_GC9A01 *tft = new Arduino_GC9A01(bus, PIN_RST, 0 /* rotation */, true /* IPS */);
@@ -19,8 +19,7 @@ int numero = 0;
 int pantallaWidth = 240;
 int pantallaHeight = 240;
 
-// uint16_t colorFondo = tft->color565(48, 57, 65);   // Color de fondo #303941
-uint16_t colorFondo = tft->color565(0, 0,0);   // Color de fondo #303941
+uint16_t colorFondo = tft->color565(48, 57, 65);   // Color de fondo #303941
 uint16_t colorTexto = tft->color565(198, 203, 212); // Color de texto #C6CBD4
 
 void setup() {

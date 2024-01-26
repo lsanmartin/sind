@@ -1,5 +1,5 @@
 // Comentar la línea que incluye esp32dumbdisplay
-//#include "esp32dumbdisplay.h" 
+//#include "esp32dumbdisplay.h"
 
 // Incluir biblioteca Bluetooth A2DP Sink
 #include "BluetoothA2DPSink.h"
@@ -11,11 +11,11 @@ BluetoothA2DPSink a2dp_sink;
 
 // I2S driver
 #include <driver/i2s.h>
- 
+
 // INMP441 I2S pin assignment
-#define I2S_WS               25
-#define I2S_SD               32
-#define I2S_SCK              33                                   
+#define I2S_WS               5
+#define I2S_SD               18
+#define I2S_SCK              17
 // #define I2S_WS               15
 // #define I2S_SD               14
 // #define I2S_SCK              2
@@ -48,19 +48,19 @@ const int I2S_DMA_BUF_LEN = 1024;
 
 
 #if I2S_SAMPLE_BIT_COUNT == 32
-  const int StreamBufferNumBytes = 512;
-  const int StreamBufferLen = StreamBufferNumBytes / 4;
-  int32_t StreamBuffer[StreamBufferLen];
+const int StreamBufferNumBytes = 512;
+const int StreamBufferLen = StreamBufferNumBytes / 4;
+int32_t StreamBuffer[StreamBufferLen];
 #else
-  #if SOUND_SAMPLE_RATE == 16000
-    // for 16 bits ... 16000 sample per second (32000 bytes per second; since 16 bits per sample) ==> 512 bytes = 16 ms per read
-    const int StreamBufferNumBytes = 512;
-  #else
-    // for 16 bits ... 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
-    const int StreamBufferNumBytes = 256;
-  #endif  
-  const int StreamBufferLen = StreamBufferNumBytes / 2;
-  int16_t StreamBuffer[StreamBufferLen];
+#if SOUND_SAMPLE_RATE == 16000
+// for 16 bits ... 16000 sample per second (32000 bytes per second; since 16 bits per sample) ==> 512 bytes = 16 ms per read
+const int StreamBufferNumBytes = 512;
+#else
+// for 16 bits ... 8000 sample per second (16000 bytes per second; since 16 bits per sample) ==> 256 bytes = 16 ms per read
+const int StreamBufferNumBytes = 256;
+#endif
+const int StreamBufferLen = StreamBufferNumBytes / 2;
+int16_t StreamBuffer[StreamBufferLen];
 #endif
 
 // sound sample (16 bits) amplification
@@ -70,25 +70,18 @@ const int DefAmplifyFactor = 10;
 
 void i2s_install();
 void i2s_setpin();
- 
 
-// DDConnectVersionTracker cvTracker;  // it is for tracking [new] DD connection established 
-// int what = 1;  // 1: mic; 2: record; 3: play
-// bool started = false;
-// int amplifyFactor = DefAmplifyFactor;//10;
-// int soundChunkId = -1; // when started sending sound [chunk], the allocated "chunk id"
-// long streamingMillis = 0;
-// int streamingTotalSampleCount = 0;
+
 
 
 void setup() {
 
   Serial.begin(115200);
 
-  // Inicializar Bluetooth en lugar de dumbdisplay
+  // Inicializar Bluetooth
   Serial.println("Configurando Bluetooth...");
-   a2dp_sink.start("ESP32_A2DP_SINK");
-  
+  a2dp_sink.start("ESP32_A2DP_SINK");
+
   Serial.println("SETUP MIC ...");
 
   // set up I2S
@@ -96,6 +89,8 @@ void setup() {
   i2s_setpin();
   i2s_zero_dma_buffer(I2S_PORT);
   i2s_start(I2S_PORT);
+  i2s_get_clk(I2S_PORT);
+  Serial.println(I2S_PORT);
 
   Serial.println("... DONE SETUP MIC");
 
@@ -106,11 +101,11 @@ void setup() {
 
 void loop() {
 
- // Leer audio del micrófono
+  // Leer audio del micrófono
   size_t bytesRead = 0;
   i2s_read(I2S_PORT, StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
 
-  
+
 }
 
 
@@ -129,11 +124,11 @@ void i2s_install() {
   };
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
 }
- 
+
 void i2s_setpin() {
   const i2s_pin_config_t pin_config = {
     .bck_io_num = I2S_SCK,
-    .ws_io_num = I2S_WS,   
+    .ws_io_num = I2S_WS,
     .data_out_num = -1,
     .data_in_num = I2S_SD
   };
