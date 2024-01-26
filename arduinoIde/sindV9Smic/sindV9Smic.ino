@@ -1,13 +1,6 @@
-
 // if want Bluetooth, uncomment the following line
 #define BLUETOOTH "ESP32BT"
 
-#include <Arduino.h>
-
-
-// Parámetros del filtro
-const float alpha = 0.325;  // Factor de suavizado, determina la frecuencia de corte
-float filteredValue = 0;  // Valor filtrado inicial
 
 #include "esp32dumbdisplay.h"
 DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
@@ -25,7 +18,7 @@ DumbDisplay dumbdisplay(new DDBluetoothSerialIO(BLUETOOTH));
 // #define I2S_SCK              2
 #define I2S_SAMPLE_BIT_COUNT 16
 #define SOUND_SAMPLE_RATE    16000
-#define SOUND_CHANNEL_COUNT  1
+#define SOUND_CHANNEL_COUNT  2
 
 
 #define I2S_PORT  I2S_NUM_0
@@ -36,7 +29,7 @@ PlotterDDLayer* plotterLayer;
 LcdDDLayer* micTabLayer;
 LcdDDLayer* recTabLayer;
 LcdDDLayer* playTabLayer;
-LcdDDLayer* startBtnLayer;
+LcdDDLayer* startBtnLayer; 
 LcdDDLayer* stopBtnLayer;
 LcdDDLayer* amplifyLblLayer;
 LedGridDDLayer* amplifyMeterLayer;
@@ -68,8 +61,8 @@ const int I2S_DMA_BUF_LEN = 1024;
 #endif
 
 // sound sample (16 bits) amplification
-const int MaxAmplifyFactor = 25;
-const int DefAmplifyFactor = 5;
+const int MaxAmplifyFactor = 20;
+const int DefAmplifyFactor = 10;
 
 
 void i2s_install();
@@ -262,7 +255,6 @@ void loop() {
 
   // read I2S data and place in data buffer
   size_t bytesRead = 0;
-  // esp_err_t result = lowPassFilter(i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY));
   esp_err_t result = i2s_read(I2S_PORT, &StreamBuffer, StreamBufferNumBytes, &bytesRead, portMAX_DELAY);
  
   int samplesRead = 0;
@@ -282,21 +274,10 @@ void loop() {
       float sumVal = 0;
       for (int i = 0; i < samplesRead; ++i) {
         int32_t val = StreamBuffer[i];
-
-
-       val = lowPassFilter(val);
-       
-        
 #if I2S_SAMPLE_BIT_COUNT == 32
         val = val / 0x0000ffff;
 #endif
-
-    
-
         if (amplifyFactor > 1) {
-           //// filtro pasa bajo
-        
-        
           val = amplifyFactor * val;
           if (val > 32700) {
             val = 32700;
@@ -367,7 +348,7 @@ void i2s_install() {
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate = SOUND_SAMPLE_RATE,
     .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
     .intr_alloc_flags = 0,
     .dma_buf_count = I2S_DMA_BUF_COUNT/*8*/,
@@ -385,9 +366,4 @@ void i2s_setpin() {
     .data_in_num = I2S_SD
   };
   i2s_set_pin(I2S_PORT, &pin_config);
-}
-
-float lowPassFilter(float input) {
-    filteredValue = alpha * input + (1 - alpha) * filteredValue;
-    return filteredValue;
 }
